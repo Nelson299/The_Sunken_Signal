@@ -1,0 +1,1346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Sunken Signal — Pirate Morse Puzzle</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Lora:ital,wght@0,400;0,500;0,600;1,400;1,500&family=DM+Mono:wght@300;400;500&display=swap');
+
+:root {
+  --ocean:    #0a1628;
+  --deep:     #060e1a;
+  --wave:     #1a3a5c;
+  --sand:     #f2e0b0;
+  --parchment:#ede0c4;
+  --aged:     #d9c89e;
+  --gold:     #c9922a;
+  --bright-gold: #f0b429;
+  --rum:      #8b3a0f;
+  --rust:     #a84424;
+  --green:    #1a5c3a;
+  --ink:      #1a1006;
+  --fade:     #7a6e58;
+  --white:    #f5f0e8;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: var(--deep);
+  min-height: 100vh;
+  font-family: 'Lora', serif;
+  overflow-x: hidden;
+  font-size: 15px;
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+}
+
+.screen { display: none; width: 100%; min-height: 100vh; flex-direction: column; align-items: center; }
+.screen.active { display: flex; }
+
+/* ══════════════════════════
+   SCREEN 0 — BOOT
+══════════════════════════ */
+#screen-boot {
+  background: var(--deep);
+  justify-content: center;
+  align-items: center;
+  gap: 28px;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+#screen-boot::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 50% 60%, rgba(26,58,92,0.4) 0%, transparent 70%);
+}
+
+.boot-waves {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 120px;
+  background: linear-gradient(to top, rgba(26,58,92,0.3), transparent);
+  animation: wave-move 4s ease-in-out infinite;
+}
+@keyframes wave-move {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+.boot-skull { font-size: 72px; animation: skull-bob 3s ease-in-out infinite; z-index: 1; }
+@keyframes skull-bob {
+  0%, 100% { transform: translateY(0) rotate(-3deg); }
+  50% { transform: translateY(-12px) rotate(3deg); }
+}
+
+.boot-title {
+  font-family: 'Cinzel', serif;
+  font-size: 28px;
+  color: var(--bright-gold);
+  text-align: center;
+  letter-spacing: 3px;
+  text-shadow: 0 0 20px rgba(240,180,41,0.4);
+  z-index: 1;
+}
+
+.boot-morse {
+  font-family: 'DM Mono', monospace;
+  font-size: 13px;
+  color: rgba(240,180,41,0.6);
+  letter-spacing: 4px;
+  z-index: 1;
+  animation: morse-flicker 2s ease-in-out infinite;
+}
+@keyframes morse-flicker {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+.boot-tap {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  color: rgba(255,255,255,0.3);
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  z-index: 1;
+  animation: blink 1.8s step-end infinite;
+}
+@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+
+/* ══════════════════════════
+   SHARED NAV
+══════════════════════════ */
+.nav-bar {
+  background: #000;
+  padding: 9px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  border-bottom: 1px solid rgba(201,146,42,0.2);
+}
+.nav-title { font-family: 'Cinzel', serif; font-size: 14px; color: var(--bright-gold); letter-spacing: 2px; }
+.nav-step  { font-family: 'DM Mono', monospace; font-size: 11px; color: rgba(255,255,255,0.3); letter-spacing: 2px; }
+
+.progress-dots {
+  display: flex; justify-content: center; gap: 8px; padding: 10px;
+  width: 100%;
+}
+.dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.12); transition: background 0.3s; }
+.dot.done    { background: var(--gold); }
+.dot.current { background: var(--rust); }
+
+/* ══════════════════════════
+   SCREEN 1 — STORY
+══════════════════════════ */
+#screen-story { background: var(--ocean); }
+
+.story-body {
+  padding: 20px 22px 28px;
+  max-width: 420px;
+  margin: 0 auto;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.story-eyebrow {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  color: var(--gold);
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.story-heading {
+  font-family: 'Cinzel', serif;
+  font-size: 30px;
+  color: var(--bright-gold);
+  line-height: 1.1;
+  margin-bottom: 4px;
+  text-shadow: 0 2px 12px rgba(240,180,41,0.2);
+}
+
+.story-sub {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: rgba(255,255,255,0.35);
+  letter-spacing: 2px;
+  margin-bottom: 20px;
+}
+
+.story-divider {
+  height: 1px;
+  background: linear-gradient(to right, transparent, var(--gold), transparent);
+  margin-bottom: 20px;
+}
+
+/* Parchment scroll */
+.parchment {
+  background: var(--parchment);
+  border-radius: 3px;
+  padding: 22px 20px;
+  position: relative;
+  box-shadow: 0 6px 24px rgba(0,0,0,0.7), inset 0 0 40px rgba(0,0,0,0.08);
+  margin-bottom: 20px;
+}
+.parchment::before, .parchment::after {
+  content: '';
+  position: absolute;
+  left: 0; right: 0;
+  height: 8px;
+}
+.parchment::before {
+  top: 0;
+  background: repeating-linear-gradient(90deg, var(--parchment) 0px, var(--parchment) 10px, var(--aged) 10px, var(--aged) 20px);
+  border-radius: 3px 3px 0 0;
+}
+.parchment::after {
+  bottom: 0;
+  background: repeating-linear-gradient(90deg, var(--parchment) 0px, var(--parchment) 10px, var(--aged) 10px, var(--aged) 20px);
+  border-radius: 0 0 3px 3px;
+}
+
+.parchment-label {
+  position: absolute;
+  top: 12px; right: 14px;
+  background: var(--rust);
+  color: white;
+  font-size: 8px;
+  padding: 2px 7px;
+  border-radius: 2px;
+  letter-spacing: 2px;
+  font-family: 'DM Mono', monospace;
+  transform: rotate(2deg);
+}
+
+.parchment-date {
+  font-size: 10px;
+  color: var(--fade);
+  letter-spacing: 2px;
+  margin-bottom: 12px;
+  font-family: 'DM Mono', monospace;
+  margin-top: 6px;
+}
+
+.parchment-text {
+  font-size: 13.5px;
+  color: var(--ink);
+  line-height: 1.85;
+  font-family: 'Lora', serif;
+}
+
+.parchment-text .hl {
+  background: rgba(201,146,42,0.25);
+  padding: 0 3px;
+  border-radius: 2px;
+  font-weight: 600;
+}
+
+.parchment-sig {
+  margin-top: 14px;
+  font-family: 'Cinzel', serif;
+  font-size: 13px;
+  color: var(--fade);
+  border-top: 1px solid var(--aged);
+  padding-top: 10px;
+}
+
+.story-cta {
+  background: var(--rum);
+  border: none;
+  color: var(--sand);
+  font-family: 'Cinzel', serif;
+  font-size: 16px;
+  letter-spacing: 2px;
+  padding: 16px;
+  border-radius: 3px;
+  cursor: pointer;
+  width: 100%;
+  transition: all 0.3s;
+  text-align: center;
+}
+.story-cta:hover { background: #a04a1a; }
+
+/* ══════════════════════════
+   SCREEN 2 — DECODE
+══════════════════════════ */
+#screen-decode { background: var(--ocean); }
+
+.decode-body {
+  padding: 18px 22px 28px;
+  max-width: 420px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* Morse signal display */
+.signal-box {
+  background: #020d1a;
+  border: 1px solid rgba(26,180,100,0.3);
+  border-radius: 6px;
+  padding: 18px 16px;
+  margin-bottom: 18px;
+  position: relative;
+  overflow: hidden;
+}
+.signal-box::before {
+  content: '';
+  position: absolute;
+  top: 0; left: -100%;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(to right, transparent, rgba(26,180,100,0.04), transparent);
+  animation: scan-line 4s linear infinite;
+}
+@keyframes scan-line { to { left: 200%; } }
+
+.signal-header {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  color: rgba(26,200,100,0.6);
+  letter-spacing: 3px;
+  margin-bottom: 12px;
+}
+.signal-header span { color: rgba(26,200,100,1); }
+
+.morse-message {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.morse-letter-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.morse-letter-num {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  color: rgba(255,255,255,0.2);
+  width: 14px;
+  flex-shrink: 0;
+}
+
+.morse-code {
+  font-family: 'DM Mono', monospace;
+  font-size: 26px;
+  color: #1adc6e;
+  letter-spacing: 8px;
+  text-shadow: 0 0 8px rgba(26,220,110,0.5);
+  flex: 1;
+}
+
+.morse-blank {
+  width: 32px;
+  height: 32px;
+  border: 2px solid rgba(240,180,41,0.4);
+  border-radius: 4px;
+  background: rgba(240,180,41,0.05);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Cinzel', serif;
+  font-size: 18px;
+  color: var(--bright-gold);
+  flex-shrink: 0;
+  transition: all 0.3s;
+}
+.morse-blank.revealed {
+  background: rgba(240,180,41,0.15);
+  border-color: var(--bright-gold);
+}
+
+.signal-footer {
+  margin-top: 12px;
+  font-family: 'DM Mono', monospace;
+  font-size: 8px;
+  color: rgba(26,200,100,0.3);
+  letter-spacing: 2px;
+  animation: morse-flicker 3s ease-in-out infinite;
+}
+
+/* Reference card reminder */
+.card-reminder {
+  background: rgba(201,146,42,0.08);
+  border: 1px solid rgba(201,146,42,0.25);
+  border-radius: 6px;
+  padding: 12px 14px;
+  margin-bottom: 18px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.card-reminder-icon { font-size: 26px; flex-shrink: 0; }
+.card-reminder-text {
+  font-size: 14px;
+  color: rgba(255,255,255,0.75);
+  line-height: 1.6;
+  font-style: italic;
+}
+.card-reminder-text strong { color: var(--bright-gold); font-style: normal; }
+
+/* Letter input grid */
+.letter-input-section { margin-bottom: 18px; }
+.letter-input-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  color: var(--gold);
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+
+.letter-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.letter-row-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  color: rgba(255,255,255,0.3);
+  letter-spacing: 2px;
+  margin-bottom: 4px;
+  margin-top: 8px;
+}
+
+.letter-btn {
+  background: #0d1f33;
+  border: 1px solid rgba(255,255,255,0.1);
+  color: rgba(255,255,255,0.7);
+  font-family: 'Cinzel', serif;
+  font-size: 16px;
+  padding: 10px 4px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+}
+.letter-btn:hover { border-color: var(--gold); color: white; background: rgba(201,146,42,0.1); }
+.letter-btn.used { opacity: 0.3; pointer-events: none; }
+
+/* Answer slots */
+.answer-slots {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+.answer-slot {
+  width: 52px; height: 52px;
+  border: 2px solid rgba(201,146,42,0.3);
+  border-radius: 6px;
+  background: rgba(240,180,41,0.04);
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Cinzel', serif;
+  font-size: 24px;
+  color: var(--bright-gold);
+  transition: all 0.3s;
+  cursor: pointer;
+  position: relative;
+}
+.answer-slot:hover { border-color: rgba(168,68,36,0.6); }
+.answer-slot.filled {
+  border-color: var(--gold);
+  background: rgba(240,180,41,0.1);
+}
+.answer-slot .slot-num {
+  position: absolute;
+  bottom: 2px; right: 5px;
+  font-size: 8px;
+  color: rgba(201,146,42,0.4);
+  font-family: 'DM Mono', monospace;
+}
+
+.slot-hint {
+  font-size: 10px;
+  color: rgba(255,255,255,0.3);
+  text-align: center;
+  font-style: italic;
+  margin-bottom: 16px;
+}
+
+.decode-submit {
+  background: var(--rum);
+  border: none;
+  color: var(--sand);
+  font-family: 'Cinzel', serif;
+  font-size: 16px;
+  letter-spacing: 2px;
+  padding: 14px;
+  border-radius: 3px;
+  cursor: pointer;
+  width: 100%;
+  transition: all 0.3s;
+  opacity: 0.4;
+  pointer-events: none;
+}
+.decode-submit.ready { opacity: 1; pointer-events: all; }
+.decode-submit.ready:hover { background: #a04a1a; }
+
+.decode-clear {
+  background: transparent;
+  border: none;
+  color: rgba(255,255,255,0.25);
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  cursor: pointer;
+  width: 100%;
+  padding: 8px;
+  margin-top: 6px;
+  text-align: center;
+}
+.decode-clear:hover { color: rgba(255,255,255,0.5); }
+
+/* ══════════════════════════
+   SCREEN 3 — TAP MORSE
+══════════════════════════ */
+#screen-tap { background: var(--ocean); }
+
+.tap-body {
+  padding: 18px 22px 28px;
+  max-width: 420px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.tap-instruction-box {
+  background: #020d1a;
+  border: 1px solid rgba(26,180,100,0.25);
+  border-radius: 6px;
+  padding: 14px 16px;
+  margin-bottom: 16px;
+}
+.tap-instruction-title {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  color: rgba(26,200,100,0.7);
+  letter-spacing: 3px;
+  margin-bottom: 8px;
+}
+.tap-instruction-text {
+  font-size: 14px;
+  color: rgba(255,255,255,0.75);
+  line-height: 1.7;
+}
+.tap-instruction-text strong { color: var(--bright-gold); }
+
+/* Target morse display */
+.target-morse-box {
+  background: rgba(240,180,41,0.06);
+  border: 1px solid rgba(240,180,41,0.2);
+  border-radius: 6px;
+  padding: 14px 16px;
+  margin-bottom: 16px;
+  text-align: center;
+}
+.target-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  color: var(--gold);
+  letter-spacing: 3px;
+  margin-bottom: 10px;
+  text-transform: uppercase;
+}
+.target-word {
+  font-family: 'Cinzel', serif;
+  font-size: 28px;
+  color: var(--bright-gold);
+  letter-spacing: 6px;
+  margin-bottom: 8px;
+}
+.target-morse-letters {
+  display: flex;
+  justify-content: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+.target-morse-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+}
+.target-morse-letter {
+  font-family: 'Cinzel', serif;
+  font-size: 14px;
+  color: rgba(255,255,255,0.5);
+}
+.target-morse-code {
+  font-family: 'DM Mono', monospace;
+  font-size: 13px;
+  color: #1adc6e;
+  letter-spacing: 3px;
+  text-shadow: 0 0 6px rgba(26,220,110,0.4);
+}
+
+/* Tap button */
+.tap-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.tap-button {
+  width: 120px; height: 120px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 40% 35%, #a84424, #5c1e08);
+  border: 3px solid var(--gold);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 44px;
+  transition: all 0.05s;
+  box-shadow: 0 6px 24px rgba(168,68,36,0.4), 0 0 0 0 rgba(240,180,41,0.3);
+  user-select: none;
+  -webkit-user-select: none;
+}
+.tap-button:active, .tap-button.pressing {
+  transform: scale(0.93);
+  box-shadow: 0 2px 8px rgba(168,68,36,0.3), 0 0 0 8px rgba(240,180,41,0.15);
+  background: radial-gradient(circle at 40% 35%, #d05528, #7a2810);
+}
+
+.tap-legend {
+  display: flex;
+  gap: 20px;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: rgba(255,255,255,0.4);
+}
+.tap-legend span { display: flex; align-items: center; gap: 5px; }
+
+/* Input display */
+.tapped-display {
+  background: #020d1a;
+  border: 1px solid rgba(26,180,100,0.2);
+  border-radius: 6px;
+  padding: 14px;
+  margin-bottom: 14px;
+  min-height: 60px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.tapped-raw {
+  font-family: 'DM Mono', monospace;
+  font-size: 18px;
+  color: #1adc6e;
+  letter-spacing: 5px;
+  text-shadow: 0 0 6px rgba(26,220,110,0.4);
+  min-height: 26px;
+  word-break: break-all;
+}
+.tapped-decoded {
+  font-family: 'Cinzel', serif;
+  font-size: 22px;
+  color: var(--bright-gold);
+  letter-spacing: 6px;
+  min-height: 28px;
+}
+.tapped-status {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  color: rgba(255,255,255,0.2);
+  letter-spacing: 2px;
+}
+
+.tap-controls {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.ctrl-btn {
+  flex: 1;
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.12);
+  color: rgba(255,255,255,0.45);
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 2px;
+  padding: 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-transform: uppercase;
+}
+.ctrl-btn:hover { border-color: var(--gold); color: var(--gold); }
+.ctrl-btn.space-btn { background: rgba(201,146,42,0.06); border-color: rgba(201,146,42,0.2); }
+.ctrl-btn.space-btn.word-gap { background: rgba(201,146,42,0.2); border-color: var(--gold); color: var(--bright-gold); }
+
+@keyframes btn-flash {
+  0%   { background: rgba(240,180,41,0.5); border-color: var(--bright-gold); color: white; transform: scale(1.06); }
+  100% { background: rgba(201,146,42,0.06); border-color: rgba(201,146,42,0.2); transform: scale(1); }
+}
+.ctrl-btn.flash {
+  animation: btn-flash 0.35s ease-out forwards;
+}
+
+.tap-submit {
+  background: var(--rum);
+  border: none;
+  color: var(--sand);
+  font-family: 'Cinzel', serif;
+  font-size: 16px;
+  letter-spacing: 2px;
+  padding: 14px;
+  border-radius: 3px;
+  cursor: pointer;
+  width: 100%;
+  transition: all 0.3s;
+  opacity: 0.4;
+  pointer-events: none;
+}
+.tap-submit.ready { opacity: 1; pointer-events: all; }
+.tap-submit.ready:hover { background: #a04a1a; }
+
+/* ══════════════════════════
+   SCREEN 4 — RESULT
+══════════════════════════ */
+#screen-result {
+  background: var(--ocean);
+  justify-content: center;
+  padding: 30px 22px;
+}
+
+.result-inner {
+  max-width: 380px;
+  width: 100%;
+  text-align: center;
+}
+
+.result-success, .result-wrong { display: none; }
+.result-success.show, .result-wrong.show { display: block; }
+
+.result-skull { font-size: 60px; margin-bottom: 16px; animation: skull-bob 3s ease-in-out infinite; }
+
+.result-stamp {
+  display: inline-block;
+  font-family: 'Cinzel', serif;
+  font-size: 26px;
+  color: #22c55e;
+  border: 4px solid #22c55e;
+  padding: 6px 18px;
+  border-radius: 4px;
+  letter-spacing: 5px;
+  transform: rotate(-5deg);
+  margin-bottom: 20px;
+  text-shadow: 0 0 12px rgba(34,197,94,0.3);
+}
+
+.result-title {
+  font-family: 'Cinzel', serif;
+  font-size: 26px;
+  color: var(--bright-gold);
+  margin-bottom: 6px;
+}
+
+.result-parchment {
+  background: var(--parchment);
+  border-radius: 3px;
+  padding: 18px;
+  text-align: left;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+}
+.result-parchment-title {
+  font-family: 'Cinzel', serif;
+  font-size: 12px;
+  color: var(--rust);
+  letter-spacing: 2px;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+}
+.result-parchment-text {
+  font-size: 13px;
+  color: var(--ink);
+  line-height: 1.8;
+  font-family: 'Lora', serif;
+}
+
+.padlock-box {
+  background: var(--deep);
+  border: 2px solid var(--bright-gold);
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 16px;
+}
+.padlock-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  color: var(--gold);
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.padlock-code {
+  font-family: 'Cinzel', serif;
+  font-size: 72px;
+  color: var(--bright-gold);
+  text-shadow: 0 0 20px rgba(240,180,41,0.4);
+  line-height: 1;
+}
+.padlock-emoji { font-size: 28px; margin-top: 6px; }
+
+/* Wrong screen */
+.wrong-stamp {
+  display: inline-block;
+  font-family: 'Cinzel', serif;
+  font-size: 26px;
+  color: var(--rust);
+  border: 4px solid var(--rust);
+  padding: 6px 18px;
+  border-radius: 4px;
+  letter-spacing: 5px;
+  transform: rotate(-3deg);
+  margin-bottom: 20px;
+}
+.wrong-text {
+  font-size: 14px;
+  color: rgba(255,255,255,0.65);
+  line-height: 1.7;
+  margin-bottom: 20px;
+  font-family: 'Lora', serif;
+  font-style: italic;
+}
+.try-again-btn {
+  background: transparent;
+  border: 1px solid rgba(201,146,42,0.4);
+  color: var(--bright-gold);
+  font-family: 'Cinzel', serif;
+  font-size: 16px;
+  letter-spacing: 2px;
+  padding: 14px;
+  border-radius: 3px;
+  cursor: pointer;
+  width: 100%;
+  transition: all 0.3s;
+}
+.try-again-btn:hover { background: rgba(201,146,42,0.08); }
+</style>
+</head>
+<body>
+
+<!-- ══════════ SCREEN 0: BOOT ══════════ -->
+<div class="screen active" id="screen-boot">
+  <div class="boot-waves"></div>
+  <div class="boot-skull">☠️</div>
+  <div class="boot-title">The Sunken Signal</div>
+  <div class="boot-tap">Tap to receive transmission</div>
+</div>
+
+<!-- ══════════ SCREEN 1: STORY ══════════ -->
+<div class="screen" id="screen-story">
+  <div class="nav-bar">
+    <span class="nav-title">☠ The Sunken Signal</span>
+    <span class="nav-step">TRANSMISSION</span>
+  </div>
+  <div class="progress-dots">
+    <div class="dot done"></div>
+    <div class="dot current"></div>
+    <div class="dot"></div>
+    <div class="dot"></div>
+  </div>
+
+  <div class="story-body">
+    <div class="story-eyebrow">Intercepted · Deep Sea Channel 7</div>
+    <div class="story-heading">The Last<br>Broadcast</div>
+    <div class="story-sub">From the wreck of The Iron Pelican · 1847</div>
+    <div class="story-divider"></div>
+
+    <div class="parchment">
+      <div class="parchment-label">EVIDENCE</div>
+      <div class="parchment-date">14th October · Storm Season</div>
+      <div class="parchment-text">
+        Before the <span class="hl">Iron Pelican</span> went down off the rocks of Cape Halvard, her navigator — a seasoned sailor known only as <span class="hl">Old Rook</span> — managed to tap out one final morse transmission.<br><br>
+        The signal was weak, broken by the crashing waves. But our coast station caught it. Eight letters. Two words.<br><br>
+        Old Rook was known to have <span class="hl">hidden the treasure chest</span> before the storm struck. The words in his transmission point to <span class="hl">where on the island</span> the chest was buried.<br><br>
+        The island has three landmarks on the chart. The padlock on the treasure chest bears a single number. Decode the signal. Find the place. <span class="hl">Claim the treasure.</span>
+      </div>
+      <div class="parchment-sig">
+        ⚓ Cape Halvard Coast Station, 1847
+      </div>
+    </div>
+
+    <button class="story-cta" onclick="goTo('screen-decode')">
+      ⚓ &nbsp; Receive the Signal
+    </button>
+  </div>
+</div>
+
+<!-- ══════════ SCREEN 2: DECODE ══════════ -->
+<div class="screen" id="screen-decode">
+  <div class="nav-bar">
+    <span class="nav-title">☠ The Sunken Signal</span>
+    <span class="nav-step">DECODE</span>
+  </div>
+  <div class="progress-dots">
+    <div class="dot done"></div>
+    <div class="dot done"></div>
+    <div class="dot current"></div>
+    <div class="dot"></div>
+  </div>
+
+  <div class="decode-body">
+    <div class="story-eyebrow" style="margin-bottom:6px;">Step 2 · Decode the transmission</div>
+    <div style="font-family:'Pirata One',cursive; font-size:22px; color:var(--bright-gold); margin-bottom:4px;">Old Rook's Last Words</div>
+    <div style="font-size:11px; color:rgba(255,255,255,0.4); font-family:'DM Mono',monospace; margin-bottom:16px; letter-spacing:1px;">Use your morse code card to decode each letter below</div>
+
+    <!-- Morse signal -->
+    <div class="signal-box">
+      <div class="signal-header">// COAST STATION INTERCEPT · <span>SIGNAL RECEIVED</span></div>
+      <div class="morse-message">
+
+        <div class="morse-letter-row">
+          <div class="morse-letter-num">1</div>
+          <div class="morse-code">— · ·</div>
+          <div class="morse-blank" id="blank-1"></div>
+        </div>
+
+        <div class="morse-letter-row">
+          <div class="morse-letter-num">2</div>
+          <div class="morse-code">· —</div>
+          <div class="morse-blank" id="blank-2"></div>
+        </div>
+
+        <div class="morse-letter-row">
+          <div class="morse-letter-num">3</div>
+          <div class="morse-code">· — ·</div>
+          <div class="morse-blank" id="blank-3"></div>
+        </div>
+
+        <div class="morse-letter-row">
+          <div class="morse-letter-num">4</div>
+          <div class="morse-code">— · —</div>
+          <div class="morse-blank" id="blank-4"></div>
+        </div>
+
+        <div class="morse-letter-row" style="margin-top:8px; padding-top:8px; border-top:1px dashed rgba(26,220,110,0.15);">
+          <div class="morse-letter-num">5</div>
+          <div class="morse-code">· — ·</div>
+          <div class="morse-blank" id="blank-5"></div>
+        </div>
+
+        <div class="morse-letter-row">
+          <div class="morse-letter-num">6</div>
+          <div class="morse-code">·</div>
+          <div class="morse-blank" id="blank-6"></div>
+        </div>
+
+        <div class="morse-letter-row">
+          <div class="morse-letter-num">7</div>
+          <div class="morse-code">·</div>
+          <div class="morse-blank" id="blank-7"></div>
+        </div>
+
+        <div class="morse-letter-row">
+          <div class="morse-letter-num">8</div>
+          <div class="morse-code">· · — ·</div>
+          <div class="morse-blank" id="blank-8"></div>
+        </div>
+
+      </div>
+      <div class="signal-footer">// SIGNAL ENDS · REMAINING CREW: UNKNOWN</div>
+    </div>
+
+    <!-- Reference card reminder -->
+    <div class="card-reminder">
+      <div class="card-reminder-icon">🗺️</div>
+      <div class="card-reminder-text">
+        Use your <strong>morse code reference card</strong> to match each sequence of dots and dashes to a letter. The dashed line separates the two words.
+      </div>
+    </div>
+
+    <!-- Answer slots -->
+    <div class="letter-input-label" style="font-family:'DM Mono',monospace; font-size:9px; color:var(--gold); letter-spacing:3px; text-transform:uppercase; margin-bottom:10px;">Your decoded phrase:</div>
+    <div class="answer-slots" style="flex-wrap:wrap; gap:8px;">
+      <div class="answer-slot" id="slot-1" onclick="clearSlot(1)" style="width:44px;height:44px;font-size:20px;"><span class="slot-num">1</span></div>
+      <div class="answer-slot" id="slot-2" onclick="clearSlot(2)" style="width:44px;height:44px;font-size:20px;"><span class="slot-num">2</span></div>
+      <div class="answer-slot" id="slot-3" onclick="clearSlot(3)" style="width:44px;height:44px;font-size:20px;"><span class="slot-num">3</span></div>
+      <div class="answer-slot" id="slot-4" onclick="clearSlot(4)" style="width:44px;height:44px;font-size:20px;"><span class="slot-num">4</span></div>
+      <div style="width:12px;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.2);font-size:18px;">·</div>
+      <div class="answer-slot" id="slot-5" onclick="clearSlot(5)" style="width:44px;height:44px;font-size:20px;"><span class="slot-num">5</span></div>
+      <div class="answer-slot" id="slot-6" onclick="clearSlot(6)" style="width:44px;height:44px;font-size:20px;"><span class="slot-num">6</span></div>
+      <div class="answer-slot" id="slot-7" onclick="clearSlot(7)" style="width:44px;height:44px;font-size:20px;"><span class="slot-num">7</span></div>
+      <div class="answer-slot" id="slot-8" onclick="clearSlot(8)" style="width:44px;height:44px;font-size:20px;"><span class="slot-num">8</span></div>
+    </div>
+    <div class="slot-hint">Tap a letter below to fill the next empty slot · Tap a filled slot to clear it</div>
+
+    <!-- Letter keyboard -->
+    <div class="letter-grid" id="letter-keyboard"></div>
+
+    <button class="decode-submit" id="decode-submit" onclick="goTo('screen-tap')">
+      ⚓ &nbsp; Confirm Word — Send Response
+    </button>
+    <button class="decode-clear" onclick="clearAll()">↺ &nbsp; Clear all</button>
+  </div>
+</div>
+
+<!-- ══════════ SCREEN 3: TAP MORSE ══════════ -->
+<div class="screen" id="screen-tap">
+  <div class="nav-bar">
+    <span class="nav-title">☠ The Sunken Signal</span>
+    <span class="nav-step">RESPOND</span>
+  </div>
+  <div class="progress-dots">
+    <div class="dot done"></div>
+    <div class="dot done"></div>
+    <div class="dot done"></div>
+    <div class="dot current"></div>
+  </div>
+
+  <div class="tap-body">
+    <div class="story-eyebrow" style="margin-bottom:6px;">Step 3 · Tap your response</div>
+    <div style="font-family:'Pirata One',cursive; font-size:22px; color:var(--bright-gold); margin-bottom:16px;">Signal Back to Shore</div>
+
+    <div class="tap-instruction-box">
+      <div class="tap-instruction-title">// HOW TO TAP MORSE</div>
+      <div class="tap-instruction-text">
+        <strong>Short tap</strong> = dot ( · ) &nbsp;|&nbsp; <strong>Hold (0.5s+)</strong> = dash ( — )<br>
+        Use <strong>Space</strong> between letters · Use <strong>⌫</strong> to delete last symbol<br>
+        Tap out the word you decoded from the signal.
+      </div>
+    </div>
+
+    <!-- Target word reminder -->
+    <div class="target-morse-box">
+      <div class="target-label">Tap this phrase in morse:</div>
+      <div class="target-word" style="font-size:22px; letter-spacing:4px;">DARK REEF</div>
+      <div style="font-size:11px; color:rgba(255,255,255,0.4); font-family:'DM Mono',monospace; margin-top:8px; letter-spacing:1px;">Use your reference card · Space between letters · Double space between words</div>
+    </div>
+
+    <!-- Tapped output -->
+    <div class="tapped-display">
+      <div class="tapped-raw" id="tapped-raw"></div>
+      <div class="tapped-decoded" id="tapped-decoded"></div>
+      <div class="tapped-status" id="tapped-status">AWAITING INPUT...</div>
+    </div>
+
+    <!-- Big tap button -->
+    <div class="tap-area">
+      <div class="tap-button" id="tap-btn">⚓</div>
+      <div class="tap-legend">
+        <span>Short tap = <strong style="color:#1adc6e;">·</strong></span>
+        <span>Hold = <strong style="color:#1adc6e;">—</strong></span>
+      </div>
+    </div>
+
+    <!-- Controls -->
+    <div class="tap-controls">
+      <button class="ctrl-btn space-btn" id="space-btn" onclick="addSpace()">Space · tap twice for new word</button>
+      <button class="ctrl-btn" onclick="deleteLast()">⌫ Delete</button>
+    </div>
+
+    <button class="tap-submit" id="tap-submit" onclick="submitMorse()">
+      ⚓ &nbsp; Transmit Signal
+    </button>
+  </div>
+</div>
+
+<!-- ══════════ SCREEN 4: RESULT ══════════ -->
+<div class="screen" id="screen-result">
+
+  <div class="nav-bar">
+    <span class="nav-title">☠ The Sunken Signal</span>
+    <span class="nav-step">SOLVED</span>
+  </div>
+
+  <div class="result-inner" style="padding-top:28px;">
+
+    <!-- SUCCESS -->
+    <div class="result-success" id="result-success">
+      <div class="result-skull">☠️</div>
+      <div class="result-stamp">SOLVED</div>
+      <div class="result-title">X Marks the Spot!</div>
+      <div style="font-size:13px; color:rgba(255,255,255,0.5); margin-bottom:20px; font-style:italic;">The treasure of the Iron Pelican is found.</div>
+
+      <div class="result-parchment">
+        <div class="result-parchment-title">⚓ Captain's Log — Decoded</div>
+        <div class="result-parchment-text">
+          Old Rook's final transmission read <strong>DARK REEF</strong>. Of the three landmarks on the island chart — the sunken arch, the dark reef, and the black crag — the <strong>dark reef is the first</strong> marked. The padlock bears the number of the landmark. Turn it to open the chest.
+        </div>
+      </div>
+
+      <div class="padlock-box">
+        <div class="padlock-label">🔐 Padlock Code</div>
+        <div class="padlock-code">1</div>
+        <div class="padlock-emoji">🏴‍☠️</div>
+      </div>
+    </div>
+
+    <!-- WRONG -->
+    <div class="result-wrong" id="result-wrong">
+      <div style="font-size:50px; text-align:center; margin-bottom:16px;">🌊</div>
+      <div class="wrong-stamp">WRONG</div>
+      <div class="wrong-text">
+        The signal was garbled, sailor. The coast station couldn't make sense of your transmission. Check your morse code card and try again — Old Rook's treasure depends on it.
+      </div>
+      <button class="try-again-btn" onclick="goTo('screen-tap')">
+        ↺ &nbsp; Retransmit Signal
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ── NAVIGATION ──
+function goTo(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0, 0);
+}
+document.getElementById('screen-boot').addEventListener('click', () => goTo('screen-story'));
+
+// ── MORSE REFERENCE ──
+const MORSE_TO_LETTER = {
+  '·—':    'A', '—···':  'B', '—·—·': 'C', '—··':   'D',
+  '·':     'E', '··—·':  'F', '——·':   'G', '····':   'H',
+  '··':    'I', '·———':  'J', '—·—':   'K', '·—··':  'L',
+  '——':    'M', '—·':    'N', '———':   'O', '·——·':  'P',
+  '——·—':  'Q', '·—·':   'R', '···':   'S', '—':     'T',
+  '··—':   'U', '···—':  'V', '·——':   'W', '—··—':  'X',
+  '—·——':  'Y', '——··':  'Z'
+};
+
+// ── DECODE SCREEN ──
+const CORRECT_WORD = 'DARKREEF';
+const CORRECT_LETTERS = ['D','A','R','K','R','E','E','F'];
+const LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+let slots = ['', '', '', '', '', '', '', ''];
+
+// Build keyboard
+const keyboard = document.getElementById('letter-keyboard');
+LETTERS.forEach(letter => {
+  const btn = document.createElement('button');
+  btn.className = 'letter-btn';
+  btn.textContent = letter;
+  btn.id = 'lbtn-' + letter;
+  btn.onclick = () => fillSlot(letter);
+  keyboard.appendChild(btn);
+});
+
+function fillSlot(letter) {
+  const nextEmpty = slots.indexOf('');
+  if (nextEmpty === -1) return;
+  slots[nextEmpty] = letter;
+  updateSlots();
+}
+
+function clearSlot(num) {
+  const idx = num - 1;
+  if (slots[idx] === '') return;
+  for (let i = idx; i < slots.length - 1; i++) {
+    slots[i] = slots[i + 1];
+  }
+  slots[slots.length - 1] = '';
+  updateSlots();
+}
+
+function clearAll() {
+  slots = ['', '', '', '', '', '', '', ''];
+  updateSlots();
+}
+
+function updateSlots() {
+  for (let i = 0; i < 8; i++) {
+    const el = document.getElementById('slot-' + (i + 1));
+    if (!el) continue;
+    const num = el.querySelector('.slot-num');
+    if (slots[i]) {
+      el.textContent = slots[i];
+      if (num) el.appendChild(num);
+      el.classList.add('filled');
+    } else {
+      el.textContent = '';
+      if (num) el.appendChild(num);
+      el.classList.remove('filled');
+    }
+  }
+
+  // Update blank indicators in signal box
+  CORRECT_LETTERS.forEach((letter, i) => {
+    const blank = document.getElementById('blank-' + (i + 1));
+    if (!blank) return;
+    if (slots[i] === letter) {
+      blank.textContent = letter;
+      blank.classList.add('revealed');
+      blank.style.color = '';
+    } else if (slots[i]) {
+      blank.textContent = slots[i];
+      blank.classList.remove('revealed');
+      blank.style.color = 'rgba(168,68,36,0.8)';
+    } else {
+      blank.textContent = '';
+      blank.classList.remove('revealed');
+      blank.style.color = '';
+    }
+  });
+
+  const word = slots.join('');
+  const submitBtn = document.getElementById('decode-submit');
+  if (word === CORRECT_WORD) {
+    submitBtn.classList.add('ready');
+    submitBtn.textContent = '⚓  DARK REEF — Confirmed! Send Response';
+  } else if (word.length === 8) {
+    submitBtn.classList.remove('ready');
+    submitBtn.textContent = '⚓  That\'s not the right phrase — try again';
+  } else {
+    submitBtn.classList.remove('ready');
+    submitBtn.textContent = '⚓  Confirm Phrase — Send Response';
+  }
+}
+
+// ── TAP MORSE SCREEN ──
+// Target: COVE = "—·—·" + " " + "———" + " " + "···—" + " " + "·"
+const TARGET_MORSE = '—·—· ——— ···— ·';
+
+let currentSymbols = '';  // symbols for current letter being tapped
+let tappedLetters = [];   // decoded letters so far
+let rawDisplay = '';      // full raw morse string
+let pressStart = null;
+let pressTimer = null;
+const DOT_THRESHOLD = 400; // ms — below this = dot, above = dash
+
+const tapBtn = document.getElementById('tap-btn');
+
+function handlePressStart(e) {
+  e.preventDefault();
+  pressStart = Date.now();
+  tapBtn.classList.add('pressing');
+}
+
+function handlePressEnd(e) {
+  e.preventDefault();
+  tapBtn.classList.remove('pressing');
+  if (!pressStart) return;
+  const duration = Date.now() - pressStart;
+  pressStart = null;
+  const symbol = duration < DOT_THRESHOLD ? '·' : '—';
+  currentSymbols += symbol;
+  rawDisplay += symbol;
+  updateTapDisplay();
+}
+
+tapBtn.addEventListener('mousedown', handlePressStart);
+tapBtn.addEventListener('mouseup', handlePressEnd);
+tapBtn.addEventListener('touchstart', handlePressStart, { passive: false });
+tapBtn.addEventListener('touchend', handlePressEnd, { passive: false });
+
+let lastSpaceWasEmpty = false; // tracks if last space press had no currentSymbols (word gap)
+
+function addSpace() {
+  const spaceBtn = document.getElementById('space-btn');
+
+  // Flash the button visually every time
+  spaceBtn.classList.remove('flash');
+  void spaceBtn.offsetWidth; // force reflow to restart animation
+  spaceBtn.classList.add('flash');
+  setTimeout(() => spaceBtn.classList.remove('flash'), 360);
+
+  if (currentSymbols) {
+    // First space after tapping symbols — commit current letter
+    const letter = MORSE_TO_LETTER[currentSymbols] || '?';
+    tappedLetters.push(letter);
+    currentSymbols = '';
+    rawDisplay += ' ';
+    lastSpaceWasEmpty = false;
+    spaceBtn.classList.remove('word-gap');
+  } else if (tappedLetters.length > 0) {
+    // Second space with no symbols — word gap
+    rawDisplay += ' ';
+    tappedLetters.push(' ');
+    lastSpaceWasEmpty = true;
+    spaceBtn.classList.add('word-gap');
+    setTimeout(() => spaceBtn.classList.remove('word-gap'), 800);
+  }
+
+  updateTapDisplay();
+}
+
+function deleteLast() {
+  if (currentSymbols.length > 0) {
+    // Delete the last symbol in the current in-progress letter
+    currentSymbols = currentSymbols.slice(0, -1);
+    rawDisplay = rawDisplay.slice(0, -1);
+  } else if (tappedLetters.length > 0) {
+    const removed = tappedLetters.pop();
+    if (removed === ' ') {
+      // Removing a word-gap space: strip the trailing space from rawDisplay
+      rawDisplay = rawDisplay.trimEnd().slice(0, -1);
+    } else {
+      // Removing a committed letter: find the morse symbols for that letter
+      const LETTER_TO_MORSE = {};
+      for (const [morse, letter] of Object.entries(MORSE_TO_LETTER)) {
+        LETTER_TO_MORSE[letter] = morse;
+      }
+      const restoredSymbols = LETTER_TO_MORSE[removed] || '';
+      // Strip the trailing " <symbols>" from rawDisplay and restore to currentSymbols
+      const lastSpace = rawDisplay.lastIndexOf(' ');
+      rawDisplay = lastSpace >= 0 ? rawDisplay.slice(0, lastSpace) : '';
+      currentSymbols = restoredSymbols;
+    }
+  }
+  updateTapDisplay();
+}
+
+function updateTapDisplay() {
+  const currentLetter = currentSymbols ? (MORSE_TO_LETTER[currentSymbols] || '?') : '';
+
+  document.getElementById('tapped-raw').textContent = rawDisplay + (currentSymbols ? '' : '');
+  // Show decoded letters with a visible gap between words
+  const decoded = tappedLetters.join('').replace(' ', ' · ');
+  document.getElementById('tapped-decoded').textContent = decoded + (currentLetter && currentSymbols ? currentLetter : '');
+
+  // Strip spaces and also include any in-progress letter for comparison
+  const committedWord = tappedLetters.join('').replace(/\s/g, '');
+  const fullWord = committedWord + (currentLetter && currentSymbols ? currentLetter : '');
+  const submitBtn = document.getElementById('tap-submit');
+
+  if (fullWord === 'DARKREEF') {
+    document.getElementById('tapped-status').textContent = '✓ TRANSMISSION READY';
+    submitBtn.classList.add('ready');
+    submitBtn.textContent = '⚓  Transmit Signal';
+  } else {
+    document.getElementById('tapped-status').textContent = 'TAPPING...';
+    submitBtn.classList.remove('ready');
+    submitBtn.textContent = '⚓  Keep tapping...';
+  }
+}
+
+function submitMorse() {
+  // Commit any in-progress letter before submitting
+  if (currentSymbols) {
+    const letter = MORSE_TO_LETTER[currentSymbols] || '?';
+    tappedLetters.push(letter);
+    currentSymbols = '';
+  }
+  const word = tappedLetters.join('').replace(/\s/g, '');
+  if (word === 'DARKREEF') {
+    document.getElementById('result-success').classList.add('show');
+    document.getElementById('result-wrong').classList.remove('show');
+  } else {
+    document.getElementById('result-success').classList.remove('show');
+    document.getElementById('result-wrong').classList.add('show');
+  }
+  goTo('screen-result');
+}
+</script>
+</body>
+</html>
